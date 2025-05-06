@@ -1,4 +1,7 @@
 {
+    "name": "amazon-order-automation",
+    "version": "1.0.0",
+    "description": "Automates Amazon orders",
     "type": "module",
     "scripts": {
         "start": "node server.mjs"
@@ -6,6 +9,7 @@
     "dependencies": {
         "dotenv": "^16.5.0",
         "node-cron": "^3.0.3",
-        "puppeteer": "^24.7.2"
+        "puppeteer-extra": "^3.3.6",
+        "puppeteer-extra-plugin-stealth": "^2.11.2"
     }
 }
