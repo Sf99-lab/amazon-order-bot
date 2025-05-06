@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { runOrderAutomation } from './index.mjs';
 
-//Run at 9:00 AM EST daily (cron runs in server time, so adjust if needed)
+//Run at 9:00 AM EST daily 
 cron.schedule('0 9 * * *', async () => {
   console.log(`[${new Date().toISOString()}] Running Amazon order task...`);
   await runOrderAutomation();
