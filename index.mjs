@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import dotenv from 'dotenv';
 import { setTimeout } from 'timers/promises';
+import { executablePath } from 'puppeteer';
 
 dotenv.config();
 // Use puppeteer-extra with stealth plugin
@@ -41,10 +42,11 @@ export async function runOrderAutomation(retryCount = 0) {
 
         // Randomly select a user agent
         const selectedUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-        
+
         const browser = await puppeteer.launch({
             headless: config.headless,
             defaultViewport: null,
+            executablePath: executablePath(),
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -55,11 +57,11 @@ export async function runOrderAutomation(retryCount = 0) {
         });
 
         const page = await browser.newPage();
-        
+
         // Set random viewport size
         await page.setViewport({
-            width: 1200 + Math.floor(Math.random() * 300),
-            height: 800 + Math.floor(Math.random() * 300),
+            width: 800 + Math.floor(Math.random() * 300),
+            height: 400 + Math.floor(Math.random() * 300),
             deviceScaleFactor: 1,
             isMobile: false,
             hasTouch: false
@@ -87,9 +89,9 @@ export async function runOrderAutomation(retryCount = 0) {
         });
 
         // Navigate to Amazon with randomized timing
-        await page.goto('https://www.amazon.com/', { 
+        await page.goto('https://www.amazon.com/', {
             waitUntil: 'domcontentloaded',
-            timeout: 60000 
+            timeout: 60000
         });
         await randomDelay();
 
@@ -174,9 +176,9 @@ export async function runOrderAutomation(retryCount = 0) {
         await randomDelay();
 
         // Navigate to product page
-        await page.goto(config.productUrl, { 
+        await page.goto(config.productUrl, {
             waitUntil: 'domcontentloaded',
-            timeout: 60000 
+            timeout: 60000
         });
         console.log('Opening product page')
         await randomDelay();
@@ -208,41 +210,61 @@ export async function runOrderAutomation(retryCount = 0) {
         await randomDelay();
 
         // Handle checkout iframe
-        try {
-            const iframeElement = await page.waitForSelector('#turbo-checkout-iframe', { 
-                visible: true,
-                timeout: 40000 
-            });
-            const iframe = await iframeElement.contentFrame();
+        const iframeElement = await page.waitForSelector('#turbo-checkout-iframe', {
+            visible: true,
+            timeout: 40000
+        });
+        const iframe = await iframeElement.contentFrame();
 
-            if (iframe) {
-                const placeOrderSelectors = [
-                    'input[type="submit"][value="Place your order"]',
-                    '#placeYourOrder',
-                    '#submitOrderButtonId'
-                ];
 
-                let orderButtonFound = false;
-                for (const selector of placeOrderSelectors) {
-                    try {
-                        await iframe.waitForSelector(selector, { timeout: 40000 });
-                        console.log('Order is now available and visible.');
-                        await iframe.click(selector);
-                        orderButtonFound = true;
-                        break;
-                    } catch (e) {
-                        continue;
-                    }
-                }
+        if (iframe) {
+            const placeOrderSelectors = [
+                'input[type="submit"][value="Place your order"]',
+                '#placeYourOrder',
+                '#submitOrderButtonId'
+            ];
 
-                if (!orderButtonFound) {
-                    throw new Error('Could not find Place Order button');
+            let orderButtonFound = false;
+            for (const selector of placeOrderSelectors) {
+                try {
+                    await iframe.waitForSelector(selector, { timeout: 40000 });
+                    console.log('Order is now available and visible.');
+                    await iframe.click(selector);
+                    orderButtonFound = true;
+                    break;
+                } catch (e) {
+                    console.error(`Error finding Place Order button: ${e.message}`);
+                    continue;
                 }
             }
-        } catch (e) {
-            console.error('Error in checkout iframe:', e.message);
-            throw e;
+
+            if (!orderButtonFound) {
+                console.log('Could not find Place Order button');
+            }
+        } else { //incase if no iframe is found
+            const placeOrderSelectors = [
+                'input[type="submit"][value="Place your order"]',
+                '#placeYourOrder',
+                '#submitOrderButtonId'
+            ];
+
+            let orderButtonFound = false;
+            for (const selector of placeOrderSelectors) {
+                try {
+                    await page.waitForSelector(selector, { timeout: 40000 });
+                    console.log('Order is now available and visible.');
+                    await page.click(selector);
+                    orderButtonFound = true;
+                    break;
+                } catch (e) {
+                    continue;
+                }
+            }
+            if (!orderButtonFound) {
+                console.log('Failed to place order');
+            }
         }
+
 
         await randomDelay(50000, 60000);
         await browser.close();
