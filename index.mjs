@@ -229,7 +229,7 @@ export async function runOrderAutomation(retryCount = 0) {
                 try {
                     await iframe.waitForSelector(selector, { timeout: 40000 });
                     console.log('Order is now available and visible.');
-                    await iframe.click(selector);
+                    //await iframe.click(selector); //Final click to place an order
                     orderButtonFound = true;
                     break;
                 } catch (e) {
@@ -253,7 +253,7 @@ export async function runOrderAutomation(retryCount = 0) {
                 try {
                     await page.waitForSelector(selector, { timeout: 40000 });
                     console.log('Order is now available and visible.');
-                    await page.click(selector);
+                    //await page.click(selector); //Final click to place an order
                     orderButtonFound = true;
                     break;
                 } catch (e) {
